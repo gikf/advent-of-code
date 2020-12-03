@@ -12,12 +12,11 @@ def main():
         file_contents, validate_password_positions
     )
     print(len(valid_passwords_positions))
-    
-    
+
 
 def validate_passwords(passwords, validator):
     """Validate passwords using validator.
-    
+
     Returns list with valid passwords"""
     valid_passwords = []
     for entry in passwords:
@@ -43,11 +42,11 @@ def validate_password_positions(policy, password):
     return len(password_chars) == 2 and char in password_chars
 
 
-def get_file_contents(file='input.txt'):
+def get_file_contents(file="input.txt"):
     """Read all lines from file."""
     with open(file) as f:
         return f.readlines()
-    
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     main()

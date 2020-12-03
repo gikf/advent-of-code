@@ -51,7 +51,7 @@ def main():
     nums = sum_n_numbers(target, numbers, 3)
     print(f'{n} numbers summing to {target}: {[*nums]}')
     print(f'Numbers multiplicated: {multi(nums)}')
-    
+
 
 if __name__ == '__main__':
     main()
