@@ -132,17 +132,6 @@ def pad_number(number, bits):
     return f'{bin(number)[2:]:0>{bits}}'
 
 
-t = '''mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
-mem[8] = 11
-mem[7] = 101
-mem[8] = 0'''.split('\n')
-
-t2 = '''mask = 000000000000000000000000000000X1001X
-mem[42] = 100
-mask = 00000000000000000000000000000000X0XX
-mem[26] = 1'''.split('\n')
-
-
 def get_file_contents(file='input.txt'):
     """Read all lines from file."""
     with open(file) as f:
