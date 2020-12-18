@@ -11,14 +11,14 @@ INACTIVE = '.'
 
 def main():
     initial_grid = load_initial_grid(
-        [line.strip() for line in get_file_contents()])
+        [line.strip() for line in get_file_contents()], 3)
     final_grid = cycle_grid_n_times(initial_grid, 6, cycle_grid)
     print(count_active_in_grid(final_grid))
     print('Four dimension:')
-    initial_grid4 = load_initial_grid4(
-        [line.strip() for line in get_file_contents()])
-    final_grid4 = cycle_grid_n_times(initial_grid4, 6, cycle_grid4)
-    print(count_active_in_grid4(final_grid4))
+    initial_grid4 = load_initial_grid(
+        [line.strip() for line in get_file_contents()], 4)
+    final_grid4 = cycle_grid_n_times(initial_grid4, 6, cycle_grid)
+    print(count_active_in_grid(final_grid4))
 
 
 def cycle_grid_n_times(grid, n, cycler):
@@ -30,23 +30,23 @@ def cycle_grid_n_times(grid, n, cycler):
 
 
 def cycle_grid(grid):
+    """Cycle grid."""
     grid = expand_grid(grid)
-    x, y, z = get_grid_size(grid)
-    new_grid = create_empty_grid(x, y, z)
-    for dim_no, dimension in enumerate(grid):
-        for row_no, row in enumerate(dimension):
-            for col_no, column in enumerate(row):
-                point = (col_no, row_no, dim_no)
-                active_neighbours = count_active_for(point, grid)
-                new_grid[dim_no][row_no][col_no] = get_new_value(
-                    column, active_neighbours)
-    return new_grid
+    grid_size = get_grid_size(grid)
+    new_grid = create_empty_grid(grid_size)
+    return get_cycled_grid(grid, new_grid, len(grid_size))
 
 
-def cycle_grid4(grid):
-    grid = expand_grid(grid)
-    x, y, z, w = get_grid_size(grid)
-    new_grid = create_empty_grid4(x, y, z, w)
+def get_cycled_grid(grid, new_grid, grid_dimension):
+    """Cycle grid to new_grid, depending on number of grid_dimension."""
+    if grid_dimension == 4:
+        return cycle_four_dimension(grid, new_grid)
+    elif grid_dimension == 3:
+        return cycle_three_dimension(grid, new_grid)
+
+
+def cycle_four_dimension(grid, new_grid):
+    """Cycle four dimension grid."""
     for w_no, one_w in enumerate(grid):
         for dim_no, dimension in enumerate(one_w):
             for row_no, row in enumerate(dimension):
@@ -55,6 +55,18 @@ def cycle_grid4(grid):
                     active_neighbours = count_active_for(point, grid)
                     new_grid[w_no][dim_no][row_no][col_no] = get_new_value(
                         column, active_neighbours)
+    return new_grid
+
+
+def cycle_three_dimension(grid, new_grid):
+    """Cycle three dimension grid."""
+    for dim_no, dimension in enumerate(grid):
+        for row_no, row in enumerate(dimension):
+            for col_no, column in enumerate(row):
+                point = (col_no, row_no, dim_no)
+                active_neighbours = count_active_for(point, grid)
+                new_grid[dim_no][row_no][col_no] = get_new_value(
+                    column, active_neighbours)
     return new_grid
 
 
@@ -67,12 +79,17 @@ def get_new_value(value, active_neighbours):
     return value
 
 
-def load_initial_grid4(state_slice):
+def load_initial_grid(state_slice, dimensions):
+    """Make initial grid from the state_slice depending on number of
+    dimensions."""
     grid = []
-    grid.append([[
+    initial_slice = [
         [column for column in row]
         for row in state_slice
-    ]])
+    ]
+    if dimensions == 4:
+        initial_slice = [initial_slice]
+    grid.append(initial_slice)
     return grid
 
 
@@ -81,13 +98,13 @@ def expand_grid(grid):
     old_size = get_grid_size(grid)
     new_size = [size + 2 for size in old_size]
     if len(old_size) == 4:
-        new_grid = create_empty_grid4(*new_size)
+        new_grid = create_empty_grid(new_size)
         for w_no, w in enumerate(grid):
             for dim_no, dimension in enumerate(w):
                 for row_no, row in enumerate(dimension):
                     new_grid[w_no + 1][dim_no + 1][row_no + 1][1:-1] = row[:]
     elif len(old_size) == 3:
-        new_grid = create_empty_grid(*new_size)
+        new_grid = create_empty_grid(new_size)
         for dim_no, dimension in enumerate(grid):
             for row_no, row in enumerate(dimension):
                 new_grid[dim_no + 1][row_no + 1][1:-1] = row[:]
@@ -128,30 +145,29 @@ def get_point_state(point, grid):
         return INACTIVE
 
 
-def count_active_in_grid4(grid):
-    return sum(
-        row.count(ACTIVE)
-        for one_w in grid
-        for dimension in one_w
-        for row in dimension
-    )
+def count_active_in_grid(grid):
+    """Count active cells in grid"""
+    if not isinstance(grid[0], list):
+        return grid.count(ACTIVE)
+    count = 0
+    for item in grid:
+        count += count_active_in_grid(item)
+    return count
 
 
-def create_empty_grid4(columns, rows, dimensions, ws):
-    return [
-        [
-            [
-                [INACTIVE for _ in range(columns)]
-                for _ in range(rows)
-            ]
-            for _ in range(dimensions)
-        ]
-        for _ in range(ws)
-    ]
+def create_empty_grid(parameters):
+    """Create empty grid - having all INACTIVE fields for given parameters."""
+    if len(parameters) == 1:
+        return [INACTIVE for _ in range(parameters[0])]
+    grid = []
+    for _ in range(parameters[-1]):
+        grid.append(create_empty_grid(parameters[:-1]))
+    return grid
 
 
 @lru_cache()
 def get_neighbours4(x, y, z, w):
+    """Get neighbours for four dimension point."""
     neighbours = []
     for nx in (x - 1, x, x + 1):
         for ny in (y - 1, y, y + 1):
@@ -164,33 +180,6 @@ def get_neighbours4(x, y, z, w):
     return neighbours
 
 
-def load_initial_grid(state_slice):
-    grid = []
-    grid.append([
-        [column for column in row]
-        for row in state_slice
-    ])
-    return grid
-
-
-def create_empty_grid(columns, rows, dimensions):
-    return [
-        [
-            [INACTIVE for _ in range(columns)]
-            for _ in range(rows)
-        ]
-        for _ in range(dimensions)
-    ]
-
-
-def count_active_in_grid(grid):
-    return sum(
-        row.count(ACTIVE)
-        for dimension in grid
-        for row in dimension
-    )
-
-
 def is_active(state):
     """Check if state is ACTIVE."""
     return state == ACTIVE
@@ -198,6 +187,7 @@ def is_active(state):
 
 @lru_cache()
 def get_neighbours(x, y, z):
+    """Get neighbours for three dimension point."""
     neighbours = []
     for nx in (x - 1, x, x + 1):
         for ny in (y - 1, y, y + 1):
