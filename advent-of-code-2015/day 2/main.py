@@ -20,7 +20,7 @@ def count_needed_for_presents(presents, counter):
 
 def count_ribbon(present):
     """Calculate needed ribbon for present.
-    
+
     Nedded ribbon is smallest perimeter of any present face,
     added to volume of the present.
     """
@@ -45,7 +45,7 @@ def get_present_volume(present):
 
 def count_paper(present):
     """Calculate needed paper.
-    
+
     paper needed is area of the box:
         2*l*w + 2*w*h + 2*h*l
     and added smallest of the sides area
@@ -68,7 +68,7 @@ def parse_presents(lines):
     return [
         parse_present(present) for present in lines
     ]
-    
+
 
 def parse_present(present):
     """Parse present from axbxc to list of int."""
