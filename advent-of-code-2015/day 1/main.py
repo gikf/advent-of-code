@@ -1,5 +1,6 @@
 """Advent of Code 2015 Day 1"""
 
+
 def main(input_file='input.txt'):
     directions = [line.strip() for line in get_file_contents(input_file)][0]
     final_floor = count_char('(', directions) - count_char(')', directions)
