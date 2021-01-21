@@ -1,3 +1,3 @@
 # Advent of Code 2020 #
 
-Repository for solutions from year 2020.
+Solutions for edition 2020.
