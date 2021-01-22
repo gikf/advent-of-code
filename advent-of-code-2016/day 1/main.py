@@ -33,7 +33,7 @@ def main(file_input='input.txt'):
     directions = parse_directions(items)
     final_position, visited_order = follow_directions(directions)
     distance_to_final = get_distance_to(final_position, (0, 0))
-    print(f'Distance to final posistion: {distance_to_final}')
+    print(f'Distance to final position: {distance_to_final}')
     first_visited_twice = find_first_visited_twice(visited_order)
     distance_to_visited_twice = get_distance_to(first_visited_twice, (0, 0))
     print(f'Distance to first visited twice: {distance_to_visited_twice}')
