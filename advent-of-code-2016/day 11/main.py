@@ -5,35 +5,23 @@ import re
 
 floor_data = namedtuple('floor', 'generator microchip')
 
-example = '''The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip.
-The second floor contains a hydrogen generator.
-The third floor contains a lithium generator.
-The fourth floor contains nothing relevant.'''.split('\n')
-
 
 def main(file_input='input.txt'):
     lines = [line.strip() for line in get_file_contents(file_input)]
     floors = get_floors(4)
-    setup_floors(floors, example)
-    elevator = 0
-    print(floors)
-    steps = move_elements_to(floors, elevator, 3, set())
-    print(steps)
-    floors = get_floors(4)
     setup_floors(floors, lines)
     elevator = 0
-    print(floors)
     steps = move_elements_to(floors, elevator, 3, set())
-    print(steps)
+    print(f'Minimum number of steps to move everything to floor 4: {steps}')
     floors = get_floors(4)
     setup_floors(floors, lines)
     elevator = 0
     for shielding in ('elerium', 'dilithium'):
         floors[0].generator.add(shielding)
         floors[0].microchip.add(shielding)
-    print(floors)
     steps = move_elements_to(floors, elevator, 3, set())
-    print(steps)
+    print('Minimum number of steps to move everything (and even more) to '
+          f'floor 4: {steps}')
 
 
 def move_elements_to(floors, elevator, target_floor, memo):
