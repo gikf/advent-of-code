@@ -49,7 +49,6 @@ def move_elements_to(floors, elevator, target_floor, memo):
         next_moves = get_moves_from_floor(cur_floors, cur_elevator)
         for direction in get_elevator_directions(cur_floors, cur_elevator):
             was_valid = False
-            paired = False
             next_moves = sorted(next_moves, key=len,
                                 reverse=True if direction == 'up' else False)
             for move in next_moves:
@@ -60,11 +59,6 @@ def move_elements_to(floors, elevator, target_floor, memo):
                 if not is_state_allowed(next_floors):
                     continue
                 was_valid = True
-                if paired and is_pair(*move):
-                    memo.add(get_set_key(next_elevator, next_floors))
-                    continue
-                if is_pair(*move):
-                    paired = True
                 queue.append((next_floors, next_elevator, cur_steps + 1))
     return None
 
@@ -76,19 +70,35 @@ def can_short(direction, length, valid):
                  or (direction == 'down' and length == 2)))
 
 
-def is_pair(*elements):
-    """Check if elements are pair."""
-    if len(elements) != 2:
-        return False
-    first, second = elements
-    return first[0] == second[0]
-
-
 def get_set_key(elevator, floors):
-    """Get set key for elevator and floors state."""
+    """Get set key for elevator and floors state.
+
+    Optimized per idea in https://www.reddit.com/r/adventofcode/comments/5hoia9/2016_day_11_solutions/db1v1ws/  # noqa
+    Specific shielding name is disregarded, what matters is only
+    how shielding pairs, numbered in appearing order, are positioned
+    on the floors.
+    """
+    shielding_to_number = get_shielding_to_number(floors)
     return (elevator,
-            tuple([tuple(sorted(floor.generator)) for floor in floors]),
-            tuple([tuple(sorted(floor.microchip)) for floor in floors]))
+            tuple([tuple([shielding_to_number[generator]
+                          for generator in floor.generator])
+                   for floor in floors]),
+            tuple([tuple([shielding_to_number[microchip]
+                          for microchip in floor.microchip])
+                   for floor in floors]))
+
+
+def get_shielding_to_number(floors):
+    """Get dict of shielding to number order in which they appear."""
+    shielding_to_number = {}
+    cur_number = 0
+    for floor in floors:
+        for part in (floor.generator, floor.microchip):
+            for element in part:
+                if element not in shielding_to_number:
+                    shielding_to_number[element] = cur_number
+                    cur_number += 1
+    return shielding_to_number
 
 
 def move_elements(floors, elevator, elements, direction):
