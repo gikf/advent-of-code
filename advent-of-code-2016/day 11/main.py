@@ -25,6 +25,7 @@ def main(file_input='input.txt'):
 
 
 def move_elements_to(floors, elevator, target_floor, memo):
+    """Find lowest number of steps to move items to target_floor."""
     queue = deque([(floors, elevator, 0)])
     while queue:
         cur_floors, cur_elevator, cur_steps = queue.popleft()
