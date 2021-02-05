@@ -7,10 +7,10 @@ puzzle = 'zpqevtbw'
 
 
 def main(salt=puzzle):
-    pad_key = find_nth_pad_key(puzzle, 64)
-    print(f'Index producing 64th key: {pad_key[0]}')
-    pad_key = find_nth_pad_key(puzzle, 64, 2017)
-    print(f'Index producing 64th key with hashing 2017 times: {pad_key[0]}')
+    key_index, _ = find_nth_pad_key(puzzle, 64)
+    print(f'Index producing 64th key: {key_index}')
+    key_index, _ = find_nth_pad_key(puzzle, 64, 2017)
+    print(f'Index producing 64th key with hashing 2017 times: {key_index}')
 
 
 def find_nth_pad_key(salt, key_number, stretch=1):
