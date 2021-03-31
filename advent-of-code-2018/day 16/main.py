@@ -76,7 +76,7 @@ def caller(operation, registers, params):
     """Call function based on operation on registers and parameters."""
     operations = get_call_operations()
     func, get_params, *rest = operations[operation]
-    return change_action(registers, *get_params(registers, params), *rest)
+    return func(registers, *get_params(registers, params), *rest)
 
 
 def register_param(registers, params):
