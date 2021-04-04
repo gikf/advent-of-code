@@ -1,6 +1,5 @@
 """Advent of Code 2018 Day 22."""
 import heapq
-from functools import lru_cache
 
 
 ROCKY = '.'
@@ -48,91 +47,84 @@ def main(file_input='input.txt'):
     target = tuple([
         int(coordinate)
         for coordinate in target_line.split(': ')[1].split(',')][::-1])
-    print(depth, target)
     cave = [[None for _ in range(target[1] + 1)]
             for _ in range(target[0] + 1)]
-    print(len(cave), len(cave[0]))
     filled = fill_cave(cave, depth, target)
     risk = count_risk(filled, target)
-    print(risk)
-    # fastest_way = find_fastest_way(example_depth, example_target)
-    # print(fastest_way)
+    print('Total risk level of smallest rectangle including '
+          f'(0, 0) and {target}: {risk}')
     fastest_way = find_fastest_way(depth, target)
-    print(fastest_way)
+    print(f'Fewest number of minutes to reach target: {fastest_way}')
 
 
 def find_fastest_way(depth, target):
+    """Find fastest way to the target, in cave with depth number."""
     heap = []
     heapq.heappush(heap, (0, 0, 0, TORCH))
-    visited = {
-        ((0, 0), TORCH): 0,
-    }
+    visited = {((0, 0), TORCH): 0}
     while True:
-        cur_time, cur_row, cur_col, cur_tool = heapq.heappop(heap)
+        cur_parameters = heapq.heappop(heap)
+        cur_time, cur_row, cur_col, cur_tool = cur_parameters
         if (cur_row, cur_col) == target and cur_tool == TORCH:
             return cur_time
-        if cur_time > 1080:
-            raise
         next_time = cur_time + 1
-        visit(
-            next_time, cur_row, cur_col, cur_tool, depth, target, visited, heap
-        )
-        # for row_change, col_change in MOVES:
-        #     next_row = cur_row + row_change
-        #     next_col = cur_col + col_change
-        #     if next_row < 0 or next_col < 0:
-        #         continue
-        #     next_type = get_type(next_row, next_col, depth, target)
-        #     if not is_tool_allowed(next_type, cur_tool):
-        #         continue
-        #     next_params = ((next_row, next_col), cur_tool)
-        #     if (visited.get(next_params, float('inf')) <= next_time):
-        #         continue
-        #     visited[next_params] = next_time
-        #     heapq.heappush(heap, (next_time, next_row, next_col, cur_tool))
+        next_parameters = next_time, cur_row, cur_col, cur_tool
+        next_moves = get_next_moves(next_parameters, depth, target)
         next_time += 7
         cur_type = get_type(cur_row, cur_col, depth, target)
         for next_tool in REGION_TO_TOOLS[cur_type] - {cur_type}:
-            visit(
-                next_time, cur_row, cur_col,
-                next_tool, depth, target, visited, heap
-            )
-        # for row_change, col_change in MOVES:
-        #     next_row = cur_row + row_change
-        #     next_col = cur_col + col_change
-        #     if next_row < 0 or next_col < 0:
-        #         continue
-        #     next_type = get_type(next_row, next_col, depth, target)
-        #     for next_tool in REGION_TO_TOOLS[next_type] - {cur_tool}:
-        #         next_params = ((next_row, next_col), next_tool)
-        #         if (visited.get(next_params, float('inf')) <= next_time):
-        #             continue
-        #         visited[next_params] = next_time
-        #         heapq.heappush(
-        #             heap, (next_time, next_row, next_col, next_tool))
+            next_parameters = next_time, cur_row, cur_col, next_tool
+            next_moves.extend(get_next_moves(next_parameters, depth, target))
+        visit(validate_moves(next_moves, depth, target), visited, heap)
 
 
-def visit(cur_time, cur_row, cur_col, cur_tool, depth, target, visited, heap):
+def visit(next_moves, visited, heap):
+    """Visits next_moves if their target doesn't have already faster way."""
+    for next_parameters in next_moves:
+        next_time, next_row, next_col, next_tool = next_parameters
+        next_params = ((next_row, next_col), next_tool)
+        if (visited.get(next_params, float('inf')) <= next_time):
+            continue
+        visited[next_params] = next_time
+        heapq.heappush(heap, next_parameters)
+
+
+def validate_moves(moves, depth, target):
+    valid_moves = []
+    for move_parameters in moves:
+        next_time, next_row, next_col, next_tool = move_parameters
+        if next_row < 0 or next_col < 0:
+            continue
+        next_type = get_type(next_row, next_col, depth, target)
+        if not is_tool_allowed(next_type, next_tool):
+            continue
+        valid_moves.append(move_parameters)
+    return valid_moves
+
+
+def get_next_moves(move_parameters, depth, target):
+    """Get next moves based on the parameters."""
+    next_time, cur_row, cur_col, next_tool = move_parameters
+    next_moves = []
     for row_change, col_change in MOVES:
         next_row = cur_row + row_change
         next_col = cur_col + col_change
         if next_row < 0 or next_col < 0:
             continue
         next_type = get_type(next_row, next_col, depth, target)
-        if not is_tool_allowed(next_type, cur_tool):
+        if not is_tool_allowed(next_type, next_tool):
             continue
-        next_params = ((next_row, next_col), cur_tool)
-        if (visited.get(next_params, float('inf')) <= cur_time):
-            continue
-        visited[next_params] = cur_time
-        heapq.heappush(heap, (cur_time, next_row, next_col, cur_tool))
+        next_moves.append((next_time, next_row, next_col, next_tool))
+    return next_moves
 
 
 def is_tool_allowed(region_type, tool):
+    """Check if tool is allowed in region_type."""
     return tool in REGION_TO_TOOLS[region_type]
 
 
 def count_risk(cave, target):
+    """Count total risk for the cave up to target."""
     counter = 0
     rows, cols = target
     for row in range(rows + 1):
@@ -142,6 +134,7 @@ def count_risk(cave, target):
 
 
 def fill_cave(cave, depth, target):
+    """Fill cave with depth number and up to target."""
     rows, cols = target
     for row in range(rows + 1):
         for col in range(cols + 1):
@@ -157,13 +150,14 @@ def fill_cave(cave, depth, target):
 
 
 def get_type(row, col, depth, target):
+    """Get region type of (row, col)."""
     if (row, col) == target:
         return TARGET
     return EROSION_TO_TYPE[get_erosion_level(row, col, depth, target) % 3]
 
 
-# @lru_cache()
 def get_erosion_level(row, col, depth, target, memo={}):
+    """Get erosion level of the (row, col)."""
     if (row, col) in memo:
         return memo[(row, col)]
     result = (get_geologic_index(row, col, depth, target) + depth) % 20183
@@ -171,8 +165,8 @@ def get_erosion_level(row, col, depth, target, memo={}):
     return result
 
 
-# @lru_cache()
 def get_geologic_index(row, col, depth, target, memo={}):
+    """Get geologic index of the (row, col)."""
     if (row == 0 and col == 0) or (row, col) == target:
         result = 0
     elif row == 0:
@@ -181,7 +175,7 @@ def get_geologic_index(row, col, depth, target, memo={}):
         result = row * 48271
     else:
         result = (get_erosion_level(row, col - 1, depth, target)
-                * get_erosion_level(row - 1, col, depth, target))
+                  * get_erosion_level(row - 1, col, depth, target))
     memo[(row, col)] = result
     return result
 
