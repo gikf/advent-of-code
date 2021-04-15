@@ -152,7 +152,6 @@ def mult_op(program, _, parameters, modes):
 def input_op(program, state, parameters, modes):
     """Input operation."""
     target = parameters[0]
-    # print('input:', state['input'], 'initial:', state['initial'])
     if state['initial']:
         program[target] = state['initial'].pop(0)
     else:
@@ -167,7 +166,6 @@ def output_op(program, state, parameters, modes):
     """Output operation."""
     value = program[parameters[0]] if modes[0] == 0 else parameters[0]
     state['output'].append(value)
-    # print('output:', state['output'])
     return True, 1
 
 
