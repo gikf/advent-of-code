@@ -5,21 +5,64 @@ def main(file_input='input.txt'):
     lines = [line.strip() for line in get_file_contents(file_input)]
     deck = [number for number in range(10_007)]
     shuffles = parse_shuffles(lines)
-    position_after_shuffles = follow_card(2019, len(deck), shuffles)
+    position_after_shuffles = follow_card(
+        2019, len(deck), shuffles, get_shuffle_follow)
     print('Position of 2019 in 10007 card deck after shuffling:',
           f'{position_after_shuffles}')
     deck_size = 119_315_717_514_047
-    position = 2020
+    card = 2020
     number_of_shuffles = 101_741_582_076_661
+    position = find_position_after_number_of_shuffles(
+        shuffles, deck_size, card, number_of_shuffles)
+    print(f'Position of card {card} in deck with {deck_size} cards '
+          f'after {number_of_shuffles} shuffles: {position}')
 
 
-def follow_card(card, deck_size, shuffles):
+def find_position_after_number_of_shuffles(
+        shuffles, deck_size, card, number_of_shuffles):
+    """Find position of card in deck_size after number_of_shuffles."""
+    # Based on reddit
+    initial_cards = [1, 0]
+    a, b = follow_card(initial_cards, deck_size, shuffles, get_part2_shuffles)
+    A = a_n = pow(a, number_of_shuffles, deck_size)
+    B = b * (a_n - 1) * mod_inverse(a - 1, deck_size)
+    position = (card - B) * mod_inverse(A, deck_size) % deck_size
+    return position
+
+
+def follow_card(card, deck_size, shuffles, shuffler):
     """Follow position of the card in deck of deck_size during shuffles."""
     position = card
     for shuffle, parameter in shuffles:
-        shuffling = get_shuffle_follow(shuffle)
+        shuffling = shuffler(shuffle)
         position = shuffling(deck_size, position, parameter)
     return position
+
+
+def get_part2_shuffles(shuffle):
+    """Shuffling functions for part 2."""
+    return {
+        'cut': cut_deck,
+        'new stack': stack_deck,
+        'increment': increment_deck
+    }[shuffle]
+
+
+def stack_deck(deck_size, cards, *_):
+    """Make new stack from deck."""
+    return [(-card + change) % deck_size
+            for card, change in zip(cards, (0, -1))]
+
+
+def cut_deck(deck_size, cards, cut):
+    """Cut deck operation."""
+    return [(card + change) % deck_size
+            for card, change in zip(cards, (0, -cut))]
+
+
+def increment_deck(deck_size, cards, increment):
+    """Increment operation."""
+    return [(card * increment) % deck_size for card in cards]
 
 
 def get_shuffle_follow(shuffle):
@@ -40,6 +83,7 @@ def egcd(a, b):
 
 
 def mod_inverse(a, m):
+    """Modular inverse."""
     gcd, x, y = egcd(a, m)
     if gcd == 1:
         return x % m
